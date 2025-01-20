@@ -2,7 +2,7 @@
 #include "global.h"
 #include"mainwindow.h"
 #include "unitfunc.h"
-SContainer::SContainer(SLayout *dis, int sizex, int sizey): SUnit(dis, sizex, sizey)
+SContainer::SContainer(SLayout *dis, int sizex, int sizey): SUnit(dis, sizex, sizey), SLayoutContainer(this)
 {
     type = Container;
     setMainColor(background_color);
@@ -75,13 +75,13 @@ void SContainer::updateColor()
 void SContainer::remove()
 {
     QList<SUnit*> con;
-    foreach (auto content, inside->contents) {
+    foreach (auto content, activeInside()->contents) {
         content->removeFromLayout();
         con.push_back(content);
     }
     SUnit::remove();
     foreach (auto content, con) {
-        activepmw->inside->clearPut(content, true);
+        activepmw->activeInside()->clearPut(content, true);
     }
 }
 

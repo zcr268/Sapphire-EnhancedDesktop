@@ -88,7 +88,7 @@ void moveCelect(SUnit *sender)
                     tem->onSwitch(pmw);
                 }
                 //清除原屏幕的长聚焦
-                foreach (SUnit* tem, activepmw->inside->contents) {
+                foreach (SUnit* tem, activepmw->activeInside()->contents) {
                     tem->preSetLongFocus(false);
                 }
 
@@ -121,13 +121,13 @@ void moveCelect(SUnit *sender)
 
 QPair<SLayout*, QPoint > deepFind(SUnit *aim)
 {
-    auto k =  activepmw->inside->insideLayouts;
-    foreach(SLayout* layout, k) {
+    auto k =  activepmw->activeInside()->insideContainers;
+    foreach(SLayoutContainer* layoutContainer, k) {
         // qDebug() << (layout == nullptr);
         // auto p = layout;
-
-        qDebug() << layout->pContainerS->objectName();
-        if(layout->pContainerS->geometry().contains(aim->geometry().center())) {
+        SLayout* layout = layoutContainer->activeInside();
+        qDebug() << layoutContainer->asWidget()->objectName();
+        if(layout->pFieldWidget()->geometry().contains(aim->geometry().center())) {
             if(!layout->OKForClearPut(aim)) {
                 continue;
             }
@@ -138,7 +138,7 @@ QPair<SLayout*, QPoint > deepFind(SUnit *aim)
         }
     }
 
-    return QPair<SLayout*, QPoint>(activepmw->inside, activepmw->inside->clearPutableInd(aim));
+    return QPair<SLayout*, QPoint>(activepmw->activeInside(), activepmw->activeInside()->clearPutableInd(aim));
 }
 
 SUnit *from_class(QString Class)
@@ -333,7 +333,7 @@ void updateCelect(SUnit *sender)
 {
     if(activepmw->celectPointList.size() == 2) {
         QRect aimRect = Point2Rect(activepmw->celectPointList[0], activepmw->celectPointList[1]);
-        foreach (SUnit* k, activepmw->inside->contents) {
+        foreach (SUnit* k, activepmw->activeInside()->contents) {
             if(!pCelectedUnits.contains(k)) {
                 if(aimRect.contains( k->geometry().center())) {
                     qDebug() << "CONTAIN";
@@ -371,12 +371,12 @@ void findProcessor()
 {
     //processor
     if(!pCelectedUnits.empty() && moving_global) {
-        SUnit* aim = activepmw->inside->SLayout::pos2Unit(activepmw->mapFromGlobal(QCursor::pos()));
+        SUnit* aim = activepmw->activeInside()->SLayout::pos2Unit(activepmw->mapFromGlobal(QCursor::pos()));
         // SUnit* aim = activepmw->inside->SLayout::ind2Unit(ind);
         if(aim != nullptr) {
             aim->preSetLongFocus(true);
         }
-        foreach (SUnit* tem, activepmw->inside->contents) {
+        foreach (SUnit* tem, activepmw->activeInside()->contents) {
             if(tem != aim && tem->preLongFocus) {
                 tem->preSetLongFocus(false);
             }

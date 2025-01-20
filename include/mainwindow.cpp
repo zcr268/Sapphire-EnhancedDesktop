@@ -134,7 +134,7 @@ void MainWindow::setupEditMenu()
     editMenu->ismain = true;
     editMenu->alwaysRequireRefresh = true;
     SET_ANCTION(act2, tr("切换精简"), editMenu, this, {
-        for(SUnit * content : inside->contents)
+        for(SUnit * content : activeInside()->contents)
         {
             content->changeSimpleMode();
         }
@@ -152,27 +152,27 @@ void MainWindow::setupEditMenu()
     })
 #endif
     SET_ANCTION(act6, tr("小型格子"), creatNewUnitMenu, this, {
-        auto bc = new SBlockContainer(inside, 2, 2, 2, 2);
+        auto bc = new SBlockContainer(activeInside(), 2, 2, 2, 2);
     })
     SET_ANCTION(act7, tr("中型格子"), creatNewUnitMenu, this, {
-        auto bc = new SBlockContainer(inside, 3, 3, 3, 3);
+        auto bc = new SBlockContainer(activeInside(), 3, 3, 3, 3);
         // InitAUnit(bc);
     })
     SET_ANCTION(act8, tr("大型格子"), creatNewUnitMenu, this, {
-        auto bc = new SBlockContainer(inside, 4, 4, 4, 4);
+        auto bc = new SBlockContainer(activeInside(), 4, 4, 4, 4);
         // InitAUnit(bc);
     })
     SET_ANCTION(act9, tr("Dock栏"), creatNewUnitMenu, this, {
-        auto dock = new SDock(inside);
+        auto dock = new SDock(activeInside());
         // InitAUnit(dock);
     })
     SET_ANCTION(act10, tr("设置箱"), creatNewUnitMenu, this, {
-        auto dock = new SEditBox(inside);
+        auto dock = new SEditBox(activeInside());
         // InitAUnit(dock);
     })
 #ifdef QT_DEBUG
     SET_ANCTION(act11, tr("重绘盒"), creatNewUnitMenu, this, {
-        auto dock = new RepaintCounterUnit(inside);
+        auto dock = new RepaintCounterUnit(activeInside());
         // InitAUnit(dock);
     })
     SET_ANCTION(act151, tr("lowerAndUpdate"), editMenu, this, {
@@ -185,18 +185,18 @@ void MainWindow::setupEditMenu()
     })
 #endif
     SET_ANCTION(act12, tr("系统盒子"), creatNewUnitMenu, this, {
-        auto dock = new SShellFuncUnit(inside);
+        auto dock = new SShellFuncUnit(activeInside());
         // InitAUnit(dock);
     })
     SET_ANCTION(act14, tr("调整布局"), editMenu, this, {
-        resizeForWithDialog((SBlockLayout*)(inside));
+        resizeForWithDialog((SBlockLayout*)(activeInside()));
     })
     SET_ANCTION(act13, tr("桌面模式"), editMenu, this, {
         toDesktopMode();
     })
 #ifdef QT_DEBUG
     SET_ANCTION(actgl, tr("gl"), editMenu, this, {
-        auto gl = new SGLShower(inside);
+        auto gl = new SGLShower(activeInside());
     })
 #endif
     SET_ANCTION(act4, tr("退出程序"), editMenu, this, {
@@ -256,7 +256,7 @@ void MainWindow::setupShower()
     showerAnimations->addAnimation(showerSizeAnimation);
     connect(showerAnimations, &QParallelAnimationGroup::finished, this, [ = ]() {
         if (showeredVisibal) {
-            inside->setVisible(true);
+            activeInside()->setVisible(true);
             changeShower->setVisible(false);
         }
         qDebug() << changeShower->pos() << changeShower->aim_size();
@@ -266,14 +266,17 @@ void MainWindow::setupShower()
 
 void MainWindow::setupLayout(int x, int y)
 {
-    inside = new SBlockLayout(this, x, y);
-    inside->isMain = true;
+    setPMW(this);
+    auto tem = new SBlockLayout(this, x, y);
+    addInside(tem);
+
+    tem->isMain = true;
     // inside->pContainerW = putWidget;
     updateSize();
 }
 
 MainWindow::MainWindow(MainWindow *parent, int screenInd)
-    : QMainWindow(parent), ui(new Ui::MainWindow)
+    : QMainWindow(parent), SLayoutContainer(this), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     setWindowIcon(appIcon);
@@ -333,11 +336,11 @@ QJsonObject MainWindow::to_json()
 {
     QJsonObject rootObject;
     rootObject.insert("ind", screenInd);
-    rootObject.insert("content", inside->to_json());
-    if(inside->useStandaloneRect) {
-        rootObject.insert("sizeW", inside->standaloneRect.width());
-        rootObject.insert("sizeH", inside->standaloneRect.height());
-    }
+    rootObject.insert("content", activeInside()->to_json());
+    // if(    SLayout* activeInside()->useStandaloneRect) {
+    //     rootObject.insert("sizeW", inside->standaloneRect.width());
+    //     rootObject.insert("sizeH", inside->standaloneRect.height());
+    // }
     return rootObject;
 }
 
@@ -346,19 +349,19 @@ void MainWindow::load_json(QJsonObject rootObject)
     screenInd = rootObject.value("ind").toInt();
     qDebug() << "loading Mainwindow" << screenInd;
     setupLayout(10, 10);
-    if(isAutoStart && inside) {
-        int sizew = inside->W_Container();
-        int sizeh = inside->H_Container();
-        if(rootObject.contains("sizeW")) {
-            sizew = rootObject.value("sizeW").toInt();
-        }
-        if(rootObject.contains("sizeH")) {
-            sizeh = rootObject.value("sizeH").toInt();
-        }
-        temSize = QSize(sizew, sizeh);
-        // inside->setStandalongRect(QRect(0, 0, sizew, sizeh));
-        updateSize();
-        qInfo() << QString("Use Previous Size: %1,%2").arg(sizew).arg(sizeh);
+    if(isAutoStart && activeInside()) {
+        // int sizew = inside->W_Container();
+        // int sizeh = inside->H_Container();
+        // if(rootObject.contains("sizeW")) {
+        //     sizew = rootObject.value("sizeW").toInt();
+        // }
+        // if(rootObject.contains("sizeH")) {
+        //     sizeh = rootObject.value("sizeH").toInt();
+        // }
+        // temSize = QSize(sizew, sizeh);
+        // // inside->setStandalongRect(QRect(0, 0, sizew, sizeh));
+        // updateSize();
+        // qInfo() << QString("Use Previous Size: %1,%2").arg(sizew).arg(sizeh);
     }
     SLayoutContainer::load_json(rootObject.value("content").toObject());
     endUpdate();
@@ -370,7 +373,7 @@ QList<MyFileInfo> MainWindow::Init(QList<MyFileInfo> &data)
     Init();
     while(!data.empty()) {
         qDebug() << "remmains" << data.size();
-        if(!inside->OKForDefaultPut(new SUnit())) {
+        if(!activeInside()->OKForDefaultPut(new SUnit())) {
             break;
         } else {
             qDebug() << "ok";
@@ -390,7 +393,7 @@ void MainWindow::endUpdate()
     if(changeShower) {
         changeShower->updateDisplay();
     }
-    if(inside != nullptr) {
+    if(activeInside() != nullptr) {
         SLayoutContainer::endUpdate();
     }
 }
@@ -417,8 +420,8 @@ void MainWindow::Init(bool final)
     }
     setupLayout(sizeX, sizeY);
     if(screenInd == 0) {
-        auto su = new SShellFuncUnit(inside);
-        auto eb = new SEditBox(inside);
+        auto su = new SShellFuncUnit(activeInside());
+        auto eb = new SEditBox(activeInside());
     }
     //如果只是单纯初始化（如第二屏，没有加载的数据，直接发送信号）
     if(final) {
@@ -429,7 +432,7 @@ void MainWindow::Init(bool final)
 void MainWindow::refresh()
 {
     if(enable_refresh_animation) {
-        inside->setVisible(false, true);
+        activeInside()->setVisible(false, true);
     }
     endUpdate();
     // if(!showeredVisibal) {
@@ -440,7 +443,7 @@ void MainWindow::refresh()
     scanForChange();
     loadInsideAll();
     if(enable_refresh_animation) {
-        inside->setVisible(true);
+        activeInside()->setVisible(true);
     }
 }
 
@@ -487,7 +490,7 @@ void MainWindow::setup()
 
 QSize MainWindow::blockSize()
 {
-    return QSize(((SBlockLayout*)inside)->W_Block_Clean(), ((SBlockLayout*)inside)->H_Block_Clean());
+    return QSize(((SBlockLayout*)activeInside())->W_Block_Clean(), ((SBlockLayout*)activeInside())->H_Block_Clean());
 }
 
 
@@ -512,7 +515,7 @@ void MainWindow::setShoweredVisibal(bool val)
             desktopMenu->hideAction(tr("刷新"));
         }
 
-        foreach (SUnit* content, inside->contents) {
+        foreach (SUnit* content, activeInside()->contents) {
             if(content->alwaysShow) {
                 content->setVisible(false);
             }
@@ -520,13 +523,13 @@ void MainWindow::setShoweredVisibal(bool val)
         if(!(showerAnimations->state() == QParallelAnimationGroup::Running)) {
             capture();
         }
-        foreach (SUnit* content, inside->contents) {
+        foreach (SUnit* content, activeInside()->contents) {
             content->setVisible(true);
         }
-        inside->setVisible(false);
+        activeInside()->setVisible(false);
         changeShower->setVisible(true);
         changeShower->raise();
-        foreach (SUnit* content, inside->contents) {
+        foreach (SUnit* content, activeInside()->contents) {
             if(content->alwaysShow) {
                 content->raise();
             }
@@ -815,7 +818,7 @@ void MainWindow::updateSize()
     // putWidget->setFixedSize(size());
 
 
-    if(inside) {
+    if(activeInside()) {
         QSize aim_inside = pscs[screenInd]->availableSize();
 
         if(isAutoStart && !temSize.isEmpty()) {
@@ -826,7 +829,7 @@ void MainWindow::updateSize()
             }
         }
 
-        inside->setStandalongRect(QRect(QPoint(0, 0), aim_inside));
+        // activeInside()->setStandalongRect(QRect(QPoint(0, 0), aim_inside));
     }
 
     move(pscs[screenInd]->geometry().topLeft() + Shift_Global);

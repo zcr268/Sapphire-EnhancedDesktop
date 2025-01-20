@@ -1,4 +1,4 @@
-#include "sflowlayout.h"
+﻿#include "sflowlayout.h"
 #include "global.h"
 #include "guifunc.h"
 #include "sscrollarea.h"
@@ -7,7 +7,7 @@
 
 SFlowlayout::SFlowlayout(SLayoutContainer *father, int maxRow, double boradXR, double boradYR, double spaceXR, double spaceYR): SLayout(father)
 {
-    putWidget = new QWidget(pContainerS);
+    putWidget = new QWidget(pFieldWidget());
     putWidget->move(0, 0);
     putWidget->show();
 
@@ -262,7 +262,7 @@ void SFlowlayout::afterResize()
 {
     // putWidget->lower();
     // putWidget->setFixedSize(pContainerS->width());
-    putWidget->setFixedSize(pContainerS->width(), 99999);
+    putWidget->setFixedSize(pFieldWidget()->width(), 99999);
     // updateScrollAnimation();
 }
 
@@ -284,20 +284,20 @@ void SFlowlayout::whenScrollAnimationUpdate()
 
 int SFlowlayout::W_Container()
 {
-    if(useStandaloneRect) {
-        return standaloneRect.width();
-    } else {
-        return pContainerS->width();
-    }
+    // if(useStandaloneRect) {
+    //     return standaloneRect.width();
+    // } else {
+    return pFieldWidget()->width();
+    // }
 }
 
 int SFlowlayout::H_Container()
 {
-    if(useStandaloneRect) {
-        return standaloneRect.width();
-    } else {
-        return pContainerS->width();
-    }
+    // if(useStandaloneRect) {
+    //     return standaloneRect.width();
+    // } else {
+    return pFieldWidget()->width();
+    // }
 }
 
 void SFlowlayout::updateBeforePut(SUnit *aim, int x, int y )

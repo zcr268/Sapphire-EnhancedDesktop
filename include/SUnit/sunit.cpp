@@ -321,7 +321,7 @@ void SUnit::enterEvent(QEvent *event)
     event->accept();
     if(layout != nullptr)
         if(!layout->isMain) {
-            layout->pContainerS->update();
+            layout->pFieldWidget()->update();
             // layout->pContainerW->repaint();
         }
     if(!moving) {
@@ -340,7 +340,7 @@ void SUnit::leaveEvent(QEvent *event)
     mouse_leave_action();
     if(layout != nullptr)
         if(!(layout->isMain)) {
-            layout->pContainerS->update();
+            layout->pFieldWidget()->update();
             // layout->pContainerW->repaint();
         }
 }
@@ -732,7 +732,7 @@ void SUnit::onDragedOut()
     positionAnimations->stop();
     if(layout)
         if(!layout->isMain) {
-            layout->pContainerS->update();
+            layout->pFieldWidget()->update();
         }
     if(layout) {
         removeFromLayout();
@@ -896,8 +896,8 @@ void SUnit::whenFocusAnimationChange()
     onScaleChange(scale*scaleFix);
     shadow_main_color->setColor(applyAlpha( displayColor(), unit_shadow_alpha));
     shadow_main_color->update();
-    if(layout && layout->pContainerS->inherits("SDock")) {
-        layout->pContainerS->update();
+    if(layout && layout->pContainer->asWidget()->inherits("SDock")) {
+        layout->pFieldWidget()->update();
     } else {
         update();
     }

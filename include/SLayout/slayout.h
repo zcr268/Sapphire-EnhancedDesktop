@@ -1,4 +1,4 @@
-#ifndef SLAYOUT_H
+﻿#ifndef SLAYOUT_H
 #define SLAYOUT_H
 
 #include "qjsonobject.h"
@@ -15,41 +15,43 @@ class SLayout: public QObject
 {
     Q_OBJECT
 public:
+    void setPMW(MainWindow* pmw);
 
     //可见
     bool visibal;
 
-    //区分主容器
+    //区分主布局
     bool isMain = false;
 
+    // 是否允许内容调整大小
     bool contentResizable = true;
 
     //可用(放置和拖动),只会影响两种判断
     bool enable = true;
 
     //用于自定义显示区域（false使用pContainer->size)
-    bool useStandaloneRect  = false;
-    void setStandalongRect(QRect rect);
+    // bool useStandaloneRect  = false;
+    // void setStandalongRect(QRect rect);
 
     virtual int W_Container()
     {
-        if(useStandaloneRect) {
-            return standaloneRect.width();
-        } else {
-            return pContainerW->width();
-        }
+        // if(useStandaloneRect) {
+        //     return standaloneRect.width();
+        // } else {
+        return pContainerW->width();
+        // }
     };
 
     virtual int H_Container()
     {
-        if(useStandaloneRect) {
-            return standaloneRect.height();
-        } else {
-            return pContainerW->height();
-        }
+        // if(useStandaloneRect) {
+        //     return standaloneRect.height();
+        // } else {
+        return pContainerW->height();
+        // }
     };
 
-    QRect standaloneRect = QRect(1, 1, 1, 1);
+    // QRect standaloneRect = QRect(1, 1, 1, 1);
 
     MainWindow* pmw;
 
@@ -58,19 +60,26 @@ public:
 
     //容器(实际上是一个对象，只是为了方便代码编译等，给与两种形式)
     SLayoutContainer* pContainer = nullptr;
-    //实际容器Widget
+
+    //容器下Layout对应的FieldWidget(主要由容器管理，一般情况下所有内容都放在FieldWidget中)
+    QWidget* pFieldWidget();
+
+    // 容器的Widget形式指针
+    // QWidget* pContainerS = nullptr;
+
+
+    //实际放置Unit和计算坐标容器Widget
     QWidget* pContainerW = nullptr;
 
-    //pContainer的Widget指针
-    QWidget* pContainerS = nullptr;
+
 
     //内部管理
     QList<SUnit*> contents;
-    QList<SLayout*> insideLayouts;
+    QList<SLayoutContainer*> insideContainers;
 
 
 
-    SLayout(SLayoutContainer* father = nullptr);
+    SLayout(SLayoutContainer *father = nullptr);
 
     // 从坐标获得最近的Block序号
     // QPoint pos2Ind(QPoint point);

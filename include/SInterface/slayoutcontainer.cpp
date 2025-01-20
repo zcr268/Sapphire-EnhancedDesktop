@@ -1,58 +1,96 @@
 ﻿#include "slayoutcontainer.h"
+#include "qglobal.h"
 #include "sdir.h"
 #include "sfile.h"
 #include "sunit.h"
 #include "slayout.h"
 #include"snotice.h"
 #include "unitfunc.h"
-SLayoutContainer::SLayoutContainer()
+QWidget *SLayoutContainer::asWidget()
 {
+    return m_self_as_widget;
+}
+
+void SLayoutContainer::initWidget(QWidget *widget)
+{
+    m_self_as_widget = widget;
+}
+
+SLayout *SLayoutContainer::activeInside()
+{
+    if(m_activeInsideInd == -1) {
+        return nullptr;
+    } else {
+        return insides[m_activeInsideInd];
+    }
+}
+
+QWidget *SLayoutContainer::fieldOf(SLayout *layout)
+{
+    if(!fields.contains(layout)) {
+        return nullptr;
+    }
+    return fields[layout];
+}
+
+QWidget *SLayoutContainer::fieldAt(int ind)
+{
+    if(!insides.contains(ind)) {
+        return nullptr;
+    } else {
+        return fields[insides[ind]];
+    }
+}
+
+SLayoutContainer::SLayoutContainer(QWidget *widget)
+{
+    initWidget(widget);
     qDebug() << "LayoutContainer Created";
 };
 
 void SLayoutContainer::clearPut(SUnit* aim, bool animated)
 {
-    inside->clearPut(aim, animated);
+    activeInside()->clearPut(aim, animated);
 }
 
 bool SLayoutContainer::OKForClearPut(SUnit* aim)
 {
-    return inside->OKForClearPut(aim);
+    return activeInside()->OKForClearPut(aim);
 }
 void SLayoutContainer::afterResize(QResizeEvent *event)
 {
-    inside->afterResize();
-    inside->UpdateContentPositon(false);
+    activeInside()->afterResize();
+    activeInside()->UpdateContentPositon(false);
 }
 
 QJsonObject SLayoutContainer::to_json()
 {
-    return inside->to_json();;
+    return activeInside()->to_json();;
 }
 
 void SLayoutContainer::load_json(QJsonObject rootObject)
 {
-    inside->load_json(rootObject);
+    activeInside()->load_json(rootObject);
 }
 
 void SLayoutContainer::setPMW(MainWindow *pmw)
 {
-    inside->pmw = pmw;
-    foreach (auto content, inside->contents) {
-        content->setPMW(pmw);
+    this->pmw = pmw;
+    foreach(auto inside, insides) {
+        inside->setPMW(pmw);
     }
 }
 
 void SLayoutContainer::updateColor()
 {
-    foreach (auto content, inside->contents) {
+    foreach (auto content, activeInside()->contents) {
         content->updateColor();
     }
 }
 
 void SLayoutContainer::loadInsideAll()
 {
-    foreach (auto content, inside->contents) {
+    foreach (auto content, activeInside()->contents) {
         content->startToLoad();
     }
 }
@@ -90,17 +128,17 @@ bool SLayoutContainer::initAUnit(SUnit *aim, bool notice, QPoint globalPos)
         return false;
     }
     // qDebug() << "Mainwindow try to add a info" << info.filePath;
-    if(!inside->OKForDefaultPut(aim, true)) {
+    if(!activeInside()->OKForDefaultPut(aim, true)) {
         SNotice::notice("布局无法容纳目标，请调整布局", "布局错误");
         return false;
     };
 
     if(globalPos == QPoint(-1, -1)) {
-        inside->defaultPut(aim, false);
+        activeInside()->defaultPut(aim, false);
     } else {
-        aim->setParent(inside->pContainerW);
-        aim->move(inside->pContainerW->mapFromGlobal(globalPos));
-        inside->clearPut(aim, false);
+        aim->setParent(activeInside()->pContainerW);
+        aim->move(activeInside()->pContainerW->mapFromGlobal(globalPos));
+        activeInside()->clearPut(aim, false);
     }
     aim->raise();
     if(notice && aim->inherits("SFile")) {
@@ -111,23 +149,23 @@ bool SLayoutContainer::initAUnit(SUnit *aim, bool notice, QPoint globalPos)
 
 bool SLayoutContainer::addAFile(QString path, bool notice, QPoint globalPos)
 {
-    return initAUnit(from_path(path, inside),  notice, globalPos);
+    return initAUnit(from_path(path, activeInside()),  notice, globalPos);
 }
 bool SLayoutContainer::addAFile(MyFileInfo& path, bool notice, QPoint globalPos)
 {
-    return initAUnit(from_info(path, inside),  notice, globalPos);
+    return initAUnit(from_info(path, activeInside()),  notice, globalPos);
 }
 
 void SLayoutContainer::setSimpleMode(bool val)
 {
-    for(SUnit * content : inside->contents) {
+    foreach(SUnit * content, activeInside()->contents) {
         content->setSimpleMode(val);
     }
 }
 
 void SLayoutContainer::setScale(double val)
 {
-    for(SUnit * content : inside->contents) {
+    foreach(SUnit * content, activeInside()->contents) {
         content->setScale(val);
     }
 }
@@ -135,7 +173,7 @@ void SLayoutContainer::setScale(double val)
 void SLayoutContainer::setOpacity(double val)
 {
     // qDebug() << val;
-    for(SUnit * content : inside->contents) {
+    foreach(SUnit * content, activeInside()->contents) {
         // qDebug() << "apply to " << content->objectName() << val;
         content->setOpacity(val);
     }
@@ -143,16 +181,45 @@ void SLayoutContainer::setOpacity(double val)
 
 void SLayoutContainer::endUpdate()
 {
-    for(SUnit * content : inside->contents) {
+    foreach(SUnit * content, activeInside()->contents) {
         content->endUpdate();
     }
 }
 
-void SLayoutContainer::setSLayout(SLayout *aim)
+void SLayoutContainer::addInside(SLayout *aim, QWidget* fieldWidget, int ind)
 {
     if(aim == nullptr) {
         return;
     }
-    inside = aim;
-    // qDebug() << "Setted inside sLayout";
+
+    //没有特别指定的fieldWidget，就用自己作为fieldWidget
+    if(fieldWidget == nullptr) {
+        fieldWidget = asWidget();
+    }
+
+    // aim->pmw = pmw;
+    int aimInd = ind;
+    if(aimInd == -1) {
+        aimInd = insides.size();
+    }
+
+
+    insides[aimInd] = aim;
+    fields[aim] = fieldWidget;
+
+    qInfo() << QString("%1 add a layout").arg(asWidget()->objectName());
+    setActiveInside(0);
+
+    aim->setPMW(pmw);
 }
+
+void SLayoutContainer::setActiveInside(int ind)
+{
+    if(ind < 0 || ind >= insides.size()) {
+        qWarning() << "SLayoutContainer::setActiveInside: ind out of range";
+        return;
+    }
+    m_activeInsideInd = ind;
+    qInfo() << "setActiveInside" << ind;
+}
+

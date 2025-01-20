@@ -9,7 +9,7 @@
 SBlockContainer::SBlockContainer(SLayout *dis, int outsizex, int outsizey, int row, int col, double boradXR, double boradYR, double spaceXR, double spaceYR)
     : SContainer(dis, outsizex, outsizey)
 {
-    if(pmw == nullptr) {
+    if(SLayoutContainer::pmw == nullptr) {
         qDebug() << "null";
     }
 
@@ -19,7 +19,8 @@ SBlockContainer::SBlockContainer(SLayout *dis, int outsizex, int outsizey, int r
     col = qMax(col, 2);
 
 
-    setSLayout( new SBlockLayout(this, row, col, boradXR, boradYR, spaceXR, spaceYR));
+    myInside =  new SBlockLayout(this, row, col, boradXR, boradYR, spaceXR, spaceYR);
+    addInside(myInside);
 
     outSizeAnimation = new QPropertyAnimation(this, "outSizeFix");
     outSizeAnimation->setDuration(long_focus_animation_time);
@@ -36,12 +37,12 @@ SBlockContainer::SBlockContainer(SLayout *dis, int outsizex, int outsizey, int r
 
 SBlockContainer::SBlockContainer(const SBlockContainer &other)
     : SBlockContainer(other.layout, other.sizeX, other.sizeY
-                      , ((SBlockLayout*)other.inside)->row
-                      , ((SBlockLayout*)other.inside)->col
-                      , ((SBlockLayout*)other.inside)->boradXR
-                      , ((SBlockLayout*)other.inside)->boradYR
-                      , ((SBlockLayout*)other.inside)->spaceXR
-                      , ((SBlockLayout*)other.inside)->spaceYR
+                      , other.myInside->row
+                      , other.myInside->col
+                      , other.myInside->boradXR
+                      , other.myInside->boradYR
+                      , other.myInside->spaceXR
+                      , other.myInside->spaceYR
                      )
 {}
 
@@ -114,7 +115,7 @@ void SBlockContainer::setupEditMenu()
         enableLongFocusEffect = !enableLongFocusEffect;
     });
     SET_ANCTION(act2, tr("调整布局"), editMenu, this, {
-        resizeForWithDialog((SBlockLayout*)inside);
+        resizeForWithDialog(myInside);
     });
 }
 
@@ -123,7 +124,7 @@ void SBlockContainer::setupEditMenu()
 
 void SBlockContainer::Say()
 {
-    for(SUnit * content : qAsConst(inside->contents)) {
+    foreach(SUnit * content, myInside->contents) {
         qDebug() << content->pos() << content->mapToGlobal(content->pos()) << content->size() << "X,Y" << content->indX << content->indY;
     }
 }

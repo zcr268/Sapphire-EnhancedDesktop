@@ -5,9 +5,12 @@
 #include "sunit.h"
 #include <QWidget>
 
+class SLinearLayout;
 class SDock : public SContainer
 {
     Q_OBJECT
+private:
+    SLinearLayout* myInside;
 public:
     explicit SDock(SLayout *dis = nullptr, int outSizeX = 5, int outSizeY = 1);
     void paintEvent(QPaintEvent *event);

@@ -1,4 +1,4 @@
-#include "sbgshower.h"
+﻿#include "sbgshower.h"
 #include "mainwindow.h"
 #include "qgraphicseffect.h"
 #include "qpainter.h"
@@ -18,20 +18,21 @@ SBGShower::SBGShower(QWidget *parent)
     setAttribute(Qt::WA_TranslucentBackground);
 }
 
-void SBGShower::paintEvent(QPaintEvent * ev){
+void SBGShower::paintEvent(QPaintEvent * ev)
+{
     // qDebug()<<"bg_pre_painted"<<pmw->transparent;
     auto tem = updateMask();
     QPainter painter(this);
     painter.setClipRegion(tem);
-    if(((MainWindow*)parentWidget())->transparent &&cap){
-        painter.drawPixmap(rect(),captrued);
-    }
-    else{
-        painter.drawPixmap(rect(),pmw->bg);
+    if(((MainWindow * )parentWidget())->transparent && cap) {
+        painter.drawPixmap(rect(), captrued);
+    } else {
+        painter.drawPixmap(rect(), pmw->bg);
     }
 }
 
-QRegion SBGShower::updateMask(){
-    QRegion tem = pmw->inside->region;
+QRegion SBGShower::updateMask()
+{
+    QRegion tem = pmw->activeInside()->region;
     return tem;
 }

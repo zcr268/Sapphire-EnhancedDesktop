@@ -14,7 +14,7 @@ class SDir : public SFile, public SLayoutContainer
 public:
     explicit SDir(SLayout* dis = nullptr, int sizex = 1, int sizey = 1, QString filePath = "");
 
-    SFlowlayout* inside_f;
+    SFlowlayout* myInside;
     bool isFold = false;
     bool isExpand = true;
     bool moveFile = true;

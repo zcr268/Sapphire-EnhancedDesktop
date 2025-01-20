@@ -8,10 +8,11 @@
 #include "unitfunc.h"
 #include "userfunc.h"
 #include"stooltip.h"
-SDir::SDir(SLayout *dis, int sizex, int sizey, QString filePath): SFile(dis, sizex, sizey, filePath)
+SDir::SDir(SLayout *dis, int sizex, int sizey, QString filePath): SFile(dis, sizex, sizey, filePath), SLayoutContainer(this)
 {
-    inside_f = new SFlowlayout(this, 5);
-    inside = inside_f;
+    myInside = new SFlowlayout(this, 5);
+    addInside(myInside);
+    // inside = inside_f;
 
     ar_fold = new SAnimationRect(this);
     ar_fold->setTime(long_focus_animation_time);
@@ -183,7 +184,7 @@ void SDir::setExpand(bool val)
     isExpand = val;
     movable = !val;
     thisResizable = !val;
-    inside->setEnable(val);
+    myInside->setEnable(val);
 
     if(layout) {
         if(val) {
@@ -199,7 +200,7 @@ void SDir::setExpand(bool val)
         loadInsideAll();
         // raiseUnderMoving(this);
     } else {
-        inside_f->scrollTo(0);
+        myInside->scrollTo(0);
         setInsideUnexpand();
         updateFocusAnimation();
     }
@@ -293,9 +294,9 @@ void SDir::startToLoad()
         qInfo() << "In" << objectName() << "load new file:" << newFile;
         SFile* thisFile;
         if(QFileInfo(newFile).isDir()) {
-            thisFile = new SDir(inside);
+            thisFile = new SDir(myInside);
         } else {
-            thisFile = new SFile(inside);
+            thisFile = new SFile(myInside);
         }
         // if(!onLoading) {
         //     //常态
@@ -399,7 +400,7 @@ void SDir::remove()
     QList<SUnit*> con;
 
 
-    foreach (SUnit* unit, inside->contents) {
+    foreach (SUnit* unit, myInside->contents) {
         if(unit->inherits("SFile")) {
             SFile* sfile = ((SFile*)unit);
             if(sfile->dirPath() == filePath_red()) {
@@ -427,7 +428,7 @@ void SDir::remove()
 
 
     foreach (auto content, con) {
-        activepmw->inside->clearPut(content, true);
+        activepmw->activeInside()->clearPut(content, true);
     }
 
 
@@ -445,7 +446,7 @@ void SDir::wheelEvent(QWheelEvent *event)
     }
     int tem = event->angleDelta().y();
     if(isExpand) {
-        ((SFlowlayout*)inside)->scroll(-tem);
+        myInside->scroll(-tem);
         event->accept();
     } else {
         setExpand(true);
@@ -465,7 +466,7 @@ bool SDir::checkType(SUnit *unit)
 
 void SDir::setInsideUnexpand()
 {
-    foreach (SUnit* unit, inside->contents) {
+    foreach (SUnit* unit, myInside->contents) {
         if(unit->inherits("SDir")) {
             ((SDir*)unit)->setExpand(false);
             ((SDir*)unit)->setFold(true);
@@ -475,7 +476,7 @@ void SDir::setInsideUnexpand()
 
 QSize SDir::aim_expandSize()
 {
-    return pmw->blockSize() * inside_f->row();
+    return SLayoutContainer::pmw->blockSize() * myInside->row();
 }
 
 void SDir::onDragedOut()

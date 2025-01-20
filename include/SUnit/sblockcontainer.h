@@ -11,6 +11,9 @@ class SBlockContainer : public SContainer
 {
     Q_OBJECT
     Q_PROPERTY(double outSizeFix MEMBER outSizeFix NOTIFY outSizeFix_changed);
+
+private:
+    SBlockLayout* myInside;
 public:
     explicit SBlockContainer(SLayout* dis = nullptr, int outsizex = 3, int outsizey = 3, int row = 3, int col = 3,
                              double boradXR = 0.05, double boradYR = 0.05, double spaceXR = 0.1, double spaceYR = 0.1);

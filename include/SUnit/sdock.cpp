@@ -1,4 +1,4 @@
-#include "sdock.h"
+﻿#include "sdock.h"
 #include "global.h"
 #include "slinearlayout.h"
 #include "stooltip.h"
@@ -10,7 +10,10 @@
 
 SDock::SDock(SLayout *dis, int outSizeX, int outSizeY): SContainer(dis, outSizeX, outSizeY)
 {
-    setSLayout(new SLinearLayout(this));
+    // setSLayout(new SLinearLayout(this));
+    myInside = new SLinearLayout(this);
+    addInside(myInside);
+
 }
 
 void SDock::paintEvent(QPaintEvent *event)
@@ -22,7 +25,7 @@ void SDock::paintEvent(QPaintEvent *event)
     }
     QPainter painter(this);
 
-    SLinearLayout* myInside = (SLinearLayout*)inside;
+    // SLinearLayout* myInside = (SLinearLayout*)inside;
 
     QLinearGradient linearGradient;
     linearGradient.setStart(QPoint(0, 0));
@@ -37,7 +40,7 @@ void SDock::paintEvent(QPaintEvent *event)
             SUnit* unit = myInside->list[i];
             auto temm = unit->mainColor;
             temm = mixColor(temm, mainColor, nowMainColorRatio);
-            float ratio = 1.0 * (inside->unit2CenterPoint(unit).x()) / width();
+            float ratio = 1.0 * (myInside->unit2CenterPoint(unit).x()) / width();
             temm.setAlpha(colorAlpha * 0.8);
             linearGradient.setColorAt(ratio, temm);
         }
@@ -48,7 +51,7 @@ void SDock::paintEvent(QPaintEvent *event)
             SUnit* unit = myInside->list[i];
             auto temm = unit->mainColor;
             temm = mixColor(temm, mainColor, nowMainColorRatio);
-            float ratio = 1.0 * (inside->unit2CenterPoint(unit).y()) / height();
+            float ratio = 1.0 * (myInside->unit2CenterPoint(unit).y()) / height();
             temm.setAlpha(colorAlpha * 0.8);
             linearGradient.setColorAt(ratio, temm);
         }
@@ -77,12 +80,12 @@ void SDock::paintEvent(QPaintEvent *event)
 
 void SDock::mouse_enter_action()
 {
-    inside->say();
+    myInside->say();
 }
 
 bool SDock::onBigger()
 {
-    SLinearLayout* myInside = (SLinearLayout*)inside;
+    // SLinearLayout* myInside = (SLinearLayout*)inside;
 
     if(myInside->direction == SLinearLayout::Horr) {
         return setBlockSize(sizeX + 1, sizeY);
@@ -94,7 +97,7 @@ bool SDock::onBigger()
 
 bool SDock::onSmaller()
 {
-    SLinearLayout* myInside = (SLinearLayout*)inside;
+    // SLinearLayout* myInside = (SLinearLayout*)inside;
 
     if(myInside->direction == SLinearLayout::Horr) {
         return setBlockSize(sizeX - 1, sizeY);
@@ -105,7 +108,7 @@ bool SDock::onSmaller()
 
 bool SDock::switchDirection()
 {
-    SLinearLayout* myInside = (SLinearLayout*)inside;
+    // SLinearLayout* myInside = (SLinearLayout*)inside;
 
     if(setBlockSize(sizeY, sizeX)) {
         foreach (auto unit, myInside->list) {
@@ -131,8 +134,8 @@ bool SDock::switchDirection()
 void SDock::endUpdate()
 {
     SContainer::endUpdate();
-    ((SLinearLayout*)inside)->refresh();
-    inside->UpdateContentPositon(false);
+    myInside->refresh();
+    myInside->UpdateContentPositon(false);
 }
 
 void SDock::switchFinishedSlot()

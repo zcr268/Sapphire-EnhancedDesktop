@@ -19,26 +19,46 @@ int cmp(const SUnit* a, const SUnit* b)
     return *p1 < *p2;
 }
 
-void SLayout::setStandalongRect(QRect rect)
+// void SLayout::setStandalongRect(QRect rect)
+// {
+//     useStandaloneRect = true;
+//     standaloneRect = rect;
+// }
+
+void SLayout::setPMW(MainWindow *pmw)
 {
-    useStandaloneRect = true;
-    standaloneRect = rect;
+    this->pmw = pmw;
+    foreach (SUnit* content, contents) {
+        content->setPMW(pmw);
+    }
+}
+
+QWidget *SLayout::pFieldWidget()
+{
+    return pContainer->fieldOf(this);
 }
 
 SLayout::SLayout(SLayoutContainer *father)
 {
     pContainer = father;
     pContainerW = dynamic_cast<QWidget*>(father);
-    pContainerS = dynamic_cast<QWidget*>(father);
-    qDebug() << pContainerS->objectName();
-    if(pContainerS->inherits("SUnit")) {
-        if(((SUnit * )pContainerS)->pmw != nullptr) {
-            pmw = ((SUnit*)pContainerS)->pmw;
-            // qDebug() << "settedpmw" << pmw->objectName();
-        }
-    } else {
-        pmw = (MainWindow*)father;
+    // pFieldWidget = dynamic_cast<QWidget*>(father);
+    // pContainerS = dynamic_cast<QWidget*>(father);
+
+    // if(pContainerS->inherits("SUnit")) {
+    //     if(((SUnit * )pContainerS)->pmw != nullptr) {
+    //         pmw = ((SUnit*)pContainerS)->pmw;
+    //     }
+    // } else {
+    //     pmw = (MainWindow*)father;
+    // }
+
+    pmw = father->pmw;
+
+    if(father != nullptr) {
+        father->addInside(this);
     }
+
 }
 
 
@@ -95,7 +115,7 @@ void SLayout::putUnit(SUnit *aim, int xind, int yind, bool animated)
     }
     contents.push_back(aim);
     if(isContainer(aim)) {
-        insideLayouts.push_back(dynamic_cast<SLayoutContainer*>(aim)->inside);
+        insideContainers.push_back(dynamic_cast<SLayoutContainer*>(aim));
     }
     aim->preSetInLayout(animated);
     updateBeforePutAnimation(aim, xind, yind);
@@ -132,7 +152,7 @@ void SLayout::RemoveAUnit(SUnit *aim)
         contents.erase(s);
     }
     if(isContainer(aim)) {
-        insideLayouts.removeOne(dynamic_cast<SLayoutContainer*>(aim)->inside);
+        insideContainers.removeOne(dynamic_cast<SLayoutContainer*>(aim));
     }
     updateAfterRemove(aim, indx, indy);
     pContainer->updateAfterRemove(aim);
@@ -205,11 +225,11 @@ void SLayout::defaultPut(SUnit *aim, bool animated)
 
 void SLayout::setVisible(bool val, bool force)
 {
-    int countt = 0;
+    // int countt = 0;
     if(force) {
         foreach(SUnit* unit, contents) {
             unit->setVisible(val);
-            countt ++;
+            // countt ++;
         }
     } else {
         foreach (SUnit* unit, contents) {
@@ -217,11 +237,11 @@ void SLayout::setVisible(bool val, bool force)
                 continue;
             }
             unit->setVisible(val);
-            countt ++;
+            // countt ++;
         }
     }
     visibal = val;
-    pContainerS->update();
+    pFieldWidget()->update();
     UpdateRegion();
     // qDebug() << "setted" << countt << " " << val;
 }
@@ -270,7 +290,7 @@ void SLayout::updateBeforeRemove(SUnit *, int, int)
 void SLayout::load_json(QJsonObject rootObject)
 {
     contents.clear();
-    insideLayouts.clear();
+    insideContainers.clear();
     QJsonArray contentsArray = rootObject.value("contents").toArray();
     QVector<SUnit*> tem;
 

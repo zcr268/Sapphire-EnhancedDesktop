@@ -1,4 +1,4 @@
-#include "stylesettingwindow.h"
+﻿#include "stylesettingwindow.h"
 #include "stylehelper.h"
 #include "global.h"
 #include "qscrollarea.h"
@@ -370,7 +370,7 @@ void StyleSettingWindow::on_rebootBox_clicked()
 
 void StyleSettingWindow::on_resizeBox_clicked()
 {
-    resizeForWithDialog((SBlockLayout*)(activepmw->inside));
+    resizeForWithDialog((SBlockLayout*)(activepmw->activeInside()));
 }
 
 

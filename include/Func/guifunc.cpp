@@ -1,4 +1,4 @@
-#include "guifunc.h"
+﻿#include "guifunc.h"
 #include "global.h"
 #include "qpainter.h"
 #include "qpainterpath.h"
@@ -185,7 +185,7 @@ QPoint refineRect(QPoint centerPoint_global, QSize size, MainWindow *pmw)
     // }
     relative.setX(qMax(relative.x(), size.width() / 2));
     relative.setY(qMax(relative.y(), size.height() / 2));
-    relative.setX(qMin(relative.x(), pmw->inside->W_Container() - size.width() / 2));
-    relative.setY(qMin(relative.y(), pmw->inside->H_Container() - size.height() / 2));
+    relative.setX(qMin(relative.x(), pmw->activeInside()->W_Container() - size.width() / 2));
+    relative.setY(qMin(relative.y(), pmw->activeInside()->H_Container() - size.height() / 2));
     return pmw->mapToGlobal(relative);
 }
